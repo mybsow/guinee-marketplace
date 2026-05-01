@@ -1,63 +1,126 @@
-
-### `docker-compose.yml`
-```yaml
 version: '3.8'
 
 services:
+  # Base de données PostgreSQL
   postgres:
     image: postgres:15-alpine
     container_name: guinee_market_db
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: guinee_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: guinee_marketplace
+      POSTGRES_USER: ${POSTGRES_USER:-guinee_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-guinee_marketplace}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql  # Script d'init
     ports:
       - "5432:5432"
     networks:
       - guinee_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guinee_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Redis pour cache et sessions
   redis:
     image: redis:7-alpine
     container_name: guinee_market_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_pass}
+    volumes:
+      - redis_data:/data
     ports:
       - "6379:6379"
     networks:
       - guinee_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Backend API (FastAPI)
   backend:
-    build: ./backend
+    build:
+      context: ./backend          # ← Chemin vers le dossier backend
+      dockerfile: Dockerfile      # ← Dockerfile dans backend/
     container_name: guinee_market_api
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DEBUG=${DEBUG:-false}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-guinee_user}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-guinee_marketplace}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_pass}@redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - MOBILEPAY_API_KEY=${MOBILEPAY_API_KEY}
+      - MOBILEPAY_API_SECRET=${MOBILEPAY_API_SECRET}
+      - MOBILEPAY_MERCHANT_ID=${MOBILEPAY_MERCHANT_ID}
+      - MOBILEPAY_WEBHOOK_SECRET=${MOBILEPAY_WEBHOOK_SECRET}
     volumes:
-      - ./backend:/app
+      - ./backend/uploads:/app/uploads  # Persister les uploads
+      - ./backend/logs:/app/logs        # Persister les logs
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://guinee_user:${DB_PASSWORD}@postgres:5432/guinee_marketplace
-      - REDIS_URL=redis://redis:6379/0
+    networks:
+      - guinee_network
+    command: >
+      sh -c "alembic upgrade head && 
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Worker Celery (tâches asynchrones)
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: guinee_market_worker
+    restart: unless-stopped
     depends_on:
-      - postgres
       - redis
+      - postgres
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-guinee_user}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-guinee_marketplace}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_pass}@redis:6379/0
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2
     networks:
       - guinee_network
 
+  # Nginx (Reverse Proxy + Frontend statique)
   nginx:
     image: nginx:alpine
     container_name: guinee_market_nginx
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./frontend/static:/usr/share/nginx/html/static
-    ports:
-      - "80:80"
+    restart: unless-stopped
     depends_on:
       - backend
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/static:/usr/share/nginx/html/static:ro
+      - ./frontend/templates:/usr/share/nginx/html/templates:ro
+      - ./admin:/usr/share/nginx/html/admin:ro
+      - ./uploads:/usr/share/nginx/html/uploads:ro
+    ports:
+      - "80:80"
+      - "443:443"  # Si HTTPS
     networks:
       - guinee_network
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
+    driver: local
 
 networks:
   guinee_network:
