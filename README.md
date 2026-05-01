@@ -38,7 +38,7 @@ Client commande → Paie via MobilePay → Fond séquestré
 - Python 3.11+
 - PostgreSQL 15+
 - Redis 7+
-- Docker & Docker Compose (optionnel)
+- Docker & Docker Compose
 
 ### Méthode 1 : Docker (Recommandé)
 
@@ -49,12 +49,12 @@ cd guinee-marketplace
 
 # Configurer l'environnement
 cp .env.example .env
-nano .env  # Renseigner les vraies valeurs
+nano .env
 
 # Lancer tous les services
 docker-compose up -d
 
-# Accéder à l'application
+# Accès
 # Frontend : http://localhost
 # API Docs : http://localhost:8000/api/docs
 # Admin    : http://localhost/admin
@@ -66,27 +66,11 @@ docker-compose up -d
 # Backend
 cd backend
 python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# ou
-venv\Scripts\activate     # Windows
-
+source venv/bin/activate
 pip install -r requirements.txt
-
-# Configurer les variables d'environnement
-cp ../.env.example ../.env
-# Éditer .env avec vos configurations
-
-# Lancer les migrations
-alembic upgrade head
-
-# Données de test (optionnel)
-python ../scripts/seed_data.py
 
 # Lancer le serveur
 python run.py
-
-# Dans un autre terminal, lancer Redis
-redis-server
 ```
 
 ---
@@ -95,42 +79,54 @@ redis-server
 
 ```
 guinee-marketplace/
-├── backend/                # API FastAPI
+│
+├── backend/
 │   ├── app/
-│   │   ├── config/        # Configuration
-│   │   ├── models/        # Modèles SQLAlchemy
-│   │   ├── schemas/       # Validation Pydantic
-│   │   ├── routes/        # Endpoints API
-│   │   ├── services/      # Logique métier
-│   │   ├── integrations/  # API MobilePay, SMS
-│   │   ├── middleware/     # Auth, Rate limiting
-│   │   └── utils/         # Helpers
-│   ├── tests/
-│   ├── alembic/           # Migrations DB
-│   └── requirements.txt
+│   │   ├── config/         # Configuration (settings, database, mobilepay)
+│   │   ├── models/         # Modèles SQLAlchemy
+│   │   ├── schemas/        # Validation Pydantic
+│   │   ├── routes/         # Endpoints API
+│   │   ├── services/       # Logique métier
+│   │   ├── integrations/   # API MobilePay, SMS Gateway
+│   │   ├── middleware/     # Auth JWT, Rate limiting
+│   │   ├── utils/          # Helpers, sécurité, logger
+│   │   └── main.py         # Point d'entrée FastAPI
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── run.py
 │
-├── frontend/              # Interface utilisateur
-│   ├── templates/         # Pages HTML
-│   ├── static/
-│   │   ├── css/
-│   │   ├── js/
-│   │   └── images/
-│   └── components/
+├── frontend/
+│   ├── templates/
+│   │   ├── base/           # Layouts (header, footer, navbar)
+│   │   ├── pages/          # Pages (home, checkout, tracking...)
+│   │   └── offline.html    # Page hors ligne PWA
+│   └── static/
+│       ├── css/            # Styles
+│       ├── js/             # JavaScript
+│       └── manifest.json   # PWA Manifest
 │
-├── admin/                 # Dashboard administration
+├── admin/
+│   ├── index.html          # Dashboard administration
+│   ├── css/
+│   │   └── admin.css
+│   └── js/
+│       ├── admin.js
+│       └── charts.js
 │
-├── docs/                  # Documentation
-│   ├── API.md
-│   └── ARCHITECTURE.md
+├── docs/
+│   └── API.md              # Documentation API
 │
-├── scripts/               # Utilitaires
-│   ├── seed_data.py
-│   └── deploy.sh
+├── scripts/
+│   ├── seed_data.py        # Données de test
+│   └── deploy.sh           # Script de déploiement
 │
 ├── docker-compose.yml
 ├── nginx.conf
 ├── .env.example
-└── README.md
+├── .gitignore
+├── README.md
+├── LICENSE
+└── PRIVACY.md
 ```
 
 ---
@@ -150,23 +146,6 @@ guinee-marketplace/
 
 ---
 
-## 🧪 Tests
-
-```bash
-cd backend
-
-# Lancer tous les tests
-pytest
-
-# Avec couverture
-pytest --cov=app --cov-report=html
-
-# Tests spécifiques
-pytest tests/test_payments.py -v
-```
-
----
-
 ## 📡 API Endpoints principaux
 
 | Méthode | Endpoint | Description |
@@ -178,6 +157,8 @@ pytest tests/test_payments.py -v
 | `POST` | `/api/payments/initiate` | Initier paiement MobilePay |
 | `POST` | `/api/orders/{id}/confirm-delivery` | **Confirmer livraison → Libérer paiement** |
 | `GET` | `/api/admin/dashboard` | Stats administrateur |
+
+Documentation API complète : [docs/API.md](docs/API.md)
 
 ---
 
@@ -202,6 +183,9 @@ docker-compose up -d
 git pull
 docker-compose build backend
 docker-compose up -d --no-deps backend
+
+# Script de déploiement
+bash scripts/deploy.sh production
 ```
 
 ---
