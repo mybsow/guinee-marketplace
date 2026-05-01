@@ -1,4 +1,6 @@
+# ============================================
 # Python
+# ============================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -7,32 +9,98 @@ __pycache__/
 dist/
 build/
 .env
+.env.local
+.env.production
+.env.development
 venv/
 env/
+.venv/
 
+# ============================================
 # IDE
+# ============================================
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.project
+.pydevproject
+.settings/
 
+# ============================================
 # OS
+# ============================================
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
+# ============================================
 # Projet
+# ============================================
 logs/
 *.log
 uploads/*
 !uploads/.gitkeep
 
+# ============================================
 # Database
+# ============================================
 *.db
+*.sqlite
 *.sqlite3
+alembic/versions/*.pyc
 
+# ============================================
 # Docker
+# ============================================
 docker-compose.override.yml
 
+# ============================================
 # Secrets
+# ============================================
 *.pem
 *.key
+*.crt
+*.p12
+secrets/
+credentials/
+*.pub
+
+# ============================================
+# Testing & Coverage
+# ============================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+
+# ============================================
+# Jupyter Notebook
+# ============================================
+.ipynb_checkpoints/
+*.ipynb
+
+# ============================================
+# Environment variables (backup)
+# ============================================
+.env.backup
+.env.*.backup
+config.ini
+settings.local.py
+
+# ============================================
+# Node (si vous ajoutez des outils JS)
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
