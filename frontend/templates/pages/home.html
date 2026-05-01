@@ -1,0 +1,145 @@
+{% extends "base/base.html" %}
+
+{% block title %}GuinéeMarket - Achetez et vendez en Guinée{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>Achetez et vendez <br>partout en <span>Guinée</span></h1>
+        <p>La première marketplace mobile avec paiement sécurisé MobilePay</p>
+        <div class="hero-cta">
+            <a href="/products" class="btn btn-primary btn-lg">Explorer les annonces</a>
+            <a href="/products/create" class="btn btn-outline btn-lg">Publier une annonce</a>
+        </div>
+    </div>
+    <div class="hero-stats">
+        <div class="stat">
+            <span class="stat-number" id="totalProducts">0</span>
+            <span class="stat-label">Annonces</span>
+        </div>
+        <div class="stat">
+            <span class="stat-number" id="totalUsers">0</span>
+            <span class="stat-label">Utilisateurs</span>
+        </div>
+        <div class="stat">
+            <span class="stat-number">8 Régions</span>
+            <span class="stat-label">Couvertes</span>
+        </div>
+    </div>
+</section>
+
+<!-- Catégories populaires -->
+<section class="categories-section">
+    <h2>Catégories populaires</h2>
+    <div class="categories-grid">
+        <a href="/products?category=electronics" class="category-card">
+            <span class="category-icon">📱</span>
+            <span class="category-name">Électronique</span>
+            <span class="category-count">1,234 annonces</span>
+        </a>
+        <a href="/products?category=vehicles" class="category-card">
+            <span class="category-icon">🚗</span>
+            <span class="category-name">Véhicules</span>
+            <span class="category-count">567 annonces</span>
+        </a>
+        <a href="/products?category=fashion" class="category-card">
+            <span class="category-icon">👕</span>
+            <span class="category-name">Mode</span>
+            <span class="category-count">890 annonces</span>
+        </a>
+        <a href="/products?category=real_estate" class="category-card">
+            <span class="category-icon">🏠</span>
+            <span class="category-name">Immobilier</span>
+            <span class="category-count">234 annonces</span>
+        </a>
+        <a href="/products?category=food" class="category-card">
+            <span class="category-icon">🍽️</span>
+            <span class="category-name">Alimentation</span>
+            <span class="category-count">456 annonces</span>
+        </a>
+        <a href="/products?category=services" class="category-card">
+            <span class="category-icon">🔧</span>
+            <span class="category-name">Services</span>
+            <span class="category-count">321 annonces</span>
+        </a>
+    </div>
+</section>
+
+<!-- Annonces récentes -->
+<section class="products-section">
+    <div class="section-header">
+        <h2>Annonces récentes</h2>
+        <a href="/products" class="see-all">Voir tout →</a>
+    </div>
+    <div class="products-grid" id="recentProducts">
+        <!-- Rempli dynamiquement par JavaScript -->
+        <div class="loading-spinner">Chargement...</div>
+    </div>
+</section>
+
+<!-- Comment ça marche -->
+<section class="how-it-works">
+    <h2>Comment ça marche ?</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>Trouvez</h3>
+            <p>Parcourez des milliers d'annonces partout en Guinée</p>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>Commandez</h3>
+            <p>Payez en toute sécurité via MobilePay</p>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>Recevez</h3>
+            <p>Confirmez la livraison pour libérer le paiement</p>
+        </div>
+    </div>
+</section>
+
+<!-- Avantages MobilePay -->
+<section class="mobilepay-banner">
+    <div class="mobilepay-content">
+        <img src="/static/images/mobilepay-logo.png" alt="MobilePay" class="mobilepay-logo">
+        <div class="mobilepay-text">
+            <h2>Paiement 100% sécurisé</h2>
+            <p>Votre argent est protégé jusqu'à la réception de votre commande</p>
+            <ul>
+                <li>✅ Paiement simple via MobilePay</li>
+                <li>✅ Remboursement garanti si problème</li>
+                <li>✅ Paiement au vendeur après livraison</li>
+            </ul>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/products.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadRecentProducts();
+        updateAuthUI();
+        updateCartCount();
+    });
+    
+    async function loadRecentProducts() {
+        try {
+            const response = await api.get('/products', { limit: 8, sort: 'newest' });
+            const products = response.products;
+            
+            const container = document.getElementById('recentProducts');
+            container.innerHTML = '';
+            
+            products.forEach(product => {
+                container.appendChild(createProductCard(product));
+            });
+        } catch (error) {
+            console.error('Erreur chargement produits:', error);
+        }
+    }
+</script>
+{% endblock %}

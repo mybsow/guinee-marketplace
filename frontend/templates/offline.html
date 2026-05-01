@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hors ligne - GuinéeMarket</title>
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            font-family: var(--font-family);
+            background: var(--gray-50);
+            padding: 20px;
+        }
+        .offline-container {
+            max-width: 400px;
+        }
+        .offline-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: var(--gray-900);
+        }
+        p {
+            color: var(--gray-600);
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📡</div>
+        <h1>Vous êtes hors ligne</h1>
+        <p>Veuillez vérifier votre connexion internet pour continuer à utiliser GuinéeMarket.</p>
+        <button onclick="window.location.reload()" class="btn btn-primary">
+            🔄 Réessayer
+        </button>
+        <p style="margin-top: 24px; font-size: 14px;">
+            Vos données seront synchronisées automatiquement une fois la connexion rétablie.
+        </p>
+    </div>
+</body>
+</html>

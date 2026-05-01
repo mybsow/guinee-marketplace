@@ -1,0 +1,59 @@
+<header class="header">
+    <div class="header-container">
+        <!-- Logo -->
+        <a href="/" class="logo">
+            <img src="/static/images/logo.svg" alt="GuinéeMarket" width="40" height="40">
+            <span class="logo-text">Guinée<span class="logo-highlight">Market</span></span>
+        </a>
+        
+        <!-- Barre de recherche -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Rechercher un produit..." class="search-input">
+            <select class="category-select" id="categorySelect">
+                <option value="">Toutes catégories</option>
+                <option value="electronics">Électronique</option>
+                <option value="vehicles">Véhicules</option>
+                <option value="fashion">Mode</option>
+                <option value="real_estate">Immobilier</option>
+                <option value="food">Alimentation</option>
+                <option value="services">Services</option>
+            </select>
+            <button class="search-btn" onclick="performSearch()">
+                🔍
+            </button>
+        </div>
+        
+        <!-- Actions utilisateur -->
+        <div class="header-actions">
+            <a href="/cart" class="cart-btn" id="cartBtn">
+                🛒 <span class="cart-count" id="cartCount">0</span>
+            </a>
+            
+            <!-- Utilisateur connecté -->
+            <div id="userMenu" class="user-menu" style="display: none;">
+                <button class="user-btn" onclick="toggleUserDropdown()">
+                    👤 <span id="userName">Mon compte</span>
+                </button>
+                <div class="user-dropdown" id="userDropdown">
+                    <a href="/user/dashboard">📊 Tableau de bord</a>
+                    <a href="/user/my-orders">📦 Mes commandes</a>
+                    <a href="/user/my-products">🏪 Mes annonces</a>
+                    <a href="/user/profile">⚙️ Profil</a>
+                    <hr>
+                    <a href="#" onclick="logout()">🚪 Déconnexion</a>
+                </div>
+            </div>
+            
+            <!-- Non connecté -->
+            <div id="authButtons" class="auth-buttons">
+                <a href="/auth/login" class="btn btn-outline">Connexion</a>
+                <a href="/auth/register" class="btn btn-primary">Créer un compte</a>
+            </div>
+            
+            <!-- Bouton vente rapide -->
+            <a href="/products/create" class="btn btn-success sell-btn">
+                + Vendre
+            </a>
+        </div>
+    </div>
+</header>

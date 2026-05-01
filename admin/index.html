@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - GuinéeMarket</title>
+    
+    <link rel="stylesheet" href="/admin/css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <h2>🛡️ Admin</h2>
+                <small>GuinéeMarket</small>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" data-page="dashboard">
+                    <span>📊</span> Tableau de bord
+                </a>
+                <a href="#users" class="nav-item" data-page="users">
+                    <span>👥</span> Utilisateurs
+                </a>
+                <a href="#products" class="nav-item" data-page="products">
+                    <span>📦</span> Produits
+                </a>
+                <a href="#transactions" class="nav-item" data-page="transactions">
+                    <span>💰</span> Transactions
+                </a>
+                <a href="#commissions" class="nav-item" data-page="commissions">
+                    <span>📈</span> Commissions
+                </a>
+                <a href="#payouts" class="nav-item" data-page="payouts">
+                    <span>💸</span> Payouts
+                </a>
+                <a href="#reports" class="nav-item" data-page="reports">
+                    <span>📋</span> Rapports
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="/" target="_blank" class="btn btn-sm">🏠 Site</a>
+                <button onclick="logout()" class="btn btn-sm btn-danger">🚪 Quitter</button>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <header class="admin-header">
+                <h1 id="pageTitle">Tableau de bord</h1>
+                <div class="header-actions">
+                    <span class="current-time" id="currentTime"></span>
+                    <span class="admin-badge">Admin</span>
+                </div>
+            </header>
+            
+            <!-- Content Area -->
+            <div class="admin-content" id="adminContent">
+                <!-- Dashboard Stats -->
+                <div class="stats-grid" id="dashboardStats">
+                    <!-- Rempli dynamiquement -->
+                </div>
+                
+                <!-- Charts -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>Commandes (30 jours)</h3>
+                        <canvas id="ordersChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Revenus plateforme</h3>
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Quick actions -->
+                <div class="quick-actions">
+                    <h3>Actions rapides</h3>
+                    <div class="actions-grid">
+                        <button class="action-card" onclick="window.location.href='#payouts'">
+                            <span>💸</span>
+                            <strong id="pendingPayoutsCount">0</strong>
+                            <small>Payouts en attente</small>
+                        </button>
+                        <button class="action-card" onclick="window.location.href='#products'">
+                            <span>📦</span>
+                            <strong id="pendingProductsCount">0</strong>
+                            <small>Produits à modérer</small>
+                        </button>
+                        <button class="action-card" onclick="window.location.href='#users'">
+                            <span>👥</span>
+                            <strong id="newUsersCount">0</strong>
+                            <small>Nouveaux utilisateurs</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/static/js/api.js"></script>
+    <script src="/admin/js/charts.js"></script>
+    <script src="/admin/js/admin.js"></script>
+</body>
+</html>

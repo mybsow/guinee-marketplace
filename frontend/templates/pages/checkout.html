@@ -1,0 +1,432 @@
+{% extends "base/base.html" %}
+
+{% block title %}Paiement - GuinéeMarket{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/checkout.css">
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <!-- Étapes de paiement -->
+    <div class="checkout-steps">
+        <div class="step active" id="step1">
+            <span class="step-indicator">1</span>
+            <span>Paiement MobilePay</span>
+        </div>
+        <div class="step" id="step2">
+            <span class="step-indicator">2</span>
+            <span>Confirmation</span>
+        </div>
+        <div class="step" id="step3">
+            <span class="step-indicator">3</span>
+            <span>Commande validée</span>
+        </div>
+    </div>
+
+    <!-- Étape 1: Paiement MobilePay -->
+    <div class="checkout-step-content" id="step1Content">
+        <div class="order-summary">
+            <h2>Récapitulatif de la commande</h2>
+            <div class="product-summary" id="productSummary">
+                <!-- Rempli dynamiquement -->
+            </div>
+            
+            <div class="price-details">
+                <div class="price-row">
+                    <span>Sous-total</span>
+                    <span id="subtotal">0 GNF</span>
+                </div>
+                <div class="price-row">
+                    <span>Frais de livraison</span>
+                    <span id="deliveryFee">0 GNF</span>
+                </div>
+                <div class="price-row">
+                    <span>Commission plateforme</span>
+                    <span id="commission">Inclus</span>
+                </div>
+                <div class="price-row total">
+                    <span>Total à payer</span>
+                    <span id="totalAmount">0 GNF</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="payment-section">
+            <div class="payment-method-selector">
+                <h3>Méthode de paiement</h3>
+                <div class="payment-option selected" id="mobilePayOption">
+                    <input type="radio" name="payment_method" value="mobilepay" checked>
+                    <img src="/static/images/mobilepay-logo.png" alt="MobilePay">
+                    <span>MobilePay Guinée</span>
+                </div>
+            </div>
+
+            <div class="mobilepay-payment-form">
+                <h3>Payer avec MobilePay</h3>
+                
+                <div class="info-banner">
+                    <span>🔒</span>
+                    <div>
+                        <strong>Paiement sécurisé</strong>
+                        <p>Votre paiement est séquestré jusqu'à la confirmation de livraison.</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phoneNumber">Numéro MobilePay</label>
+                    <input type="tel" id="phoneNumber" class="form-control" 
+                           placeholder="+224 6XX XXX XXX" 
+                           value="">
+                    <small>Entrez le numéro associé à votre compte MobilePay</small>
+                </div>
+
+                <div class="timeline-info">
+                    <h4>⏱️ Délai de paiement</h4>
+                    <p>Vous avez <strong>5 minutes</strong> pour confirmer le paiement sur votre téléphone</p>
+                </div>
+
+                <button class="btn btn-primary btn-lg btn-block" id="initiatePaymentBtn" onclick="initiatePayment()">
+                    <span class="btn-text">Payer maintenant</span>
+                    <span class="btn-loader" style="display: none;">⏳ Traitement...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Étape 2: Attente confirmation -->
+    <div class="checkout-step-content" id="step2Content" style="display: none;">
+        <div class="payment-pending">
+            <div class="pending-animation">
+                <div class="spinner"></div>
+                <h2>Paiement en cours...</h2>
+                <p>Veuillez confirmer le paiement sur votre téléphone</p>
+            </div>
+
+            <div class="payment-instructions">
+                <h3>📱 Instructions</h3>
+                <ol>
+                    <li>Vous allez recevoir une notification MobilePay sur votre téléphone</li>
+                    <li>Ouvrez l'application MobilePay</li>
+                    <li>Saisissez votre code PIN pour confirmer</li>
+                    <li>Revenez sur cette page une fois confirmé</li>
+                </ol>
+            </div>
+
+            <div class="payment-details-box">
+                <h4>Détails du paiement</h4>
+                <div class="detail-row">
+                    <span>Référence:</span>
+                    <strong id="paymentReference">-</strong>
+                </div>
+                <div class="detail-row">
+                    <span>Montant:</span>
+                    <strong id="pendingAmount">-</strong>
+                </div>
+                <div class="detail-row">
+                    <span>Statut:</span>
+                    <span class="badge badge-pending" id="paymentStatus">En attente</span>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="verifyPaymentBtn" onclick="verifyPayment()">
+                    ✅ J'ai confirmé le paiement
+                </button>
+                <button class="btn btn-outline" onclick="cancelPayment()">
+                    ❌ Annuler le paiement
+                </button>
+            </div>
+
+            <div class="timer" id="paymentTimer">
+                Temps restant: <span id="timerDisplay">05:00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Étape 3: Confirmation -->
+    <div class="checkout-step-content" id="step3Content" style="display: none;">
+        <div class="payment-success">
+            <div class="success-icon">✅</div>
+            <h2>Paiement confirmé !</h2>
+            <p class="success-message">
+                Votre commande a été validée. Le vendeur va maintenant préparer votre commande.
+            </p>
+            
+            <div class="important-notice">
+                <h4>🔒 Important</h4>
+                <p>
+                    Votre paiement de <strong id="confirmedAmount">0 GNF</strong> est sécurisé.
+                    Il ne sera versé au vendeur qu'après votre confirmation de livraison.
+                </p>
+            </div>
+
+            <div class="order-details" id="orderDetails">
+                <h4>Détails de la commande</h4>
+                <div class="detail-row">
+                    <span>N° Commande:</span>
+                    <strong id="orderReference">-</strong>
+                </div>
+                <div class="detail-row">
+                    <span>Statut:</span>
+                    <span class="badge badge-success">Payée</span>
+                </div>
+            </div>
+
+            <div class="next-steps">
+                <h4>📋 Prochaines étapes</h4>
+                <div class="timeline">
+                    <div class="timeline-item completed">
+                        <span class="dot">✓</span>
+                        <span>Paiement effectué</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="dot">2</span>
+                        <span>Le vendeur prépare votre commande</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="dot">3</span>
+                        <span>Livraison de votre commande</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="dot">4</span>
+                        <span>Vous confirmez la réception</span>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="dot">5</span>
+                        <span>Paiement libéré au vendeur</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="/orders/tracking?id=" class="btn btn-primary" id="trackOrderBtn">
+                    📦 Suivre ma commande
+                </a>
+                <a href="/" class="btn btn-outline">
+                    🏠 Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/payment.js"></script>
+<script>
+    // Récupérer les données de la commande
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get('order_id');
+    
+    let currentPayment = null;
+    let paymentTimer = null;
+    let timeLeft = 300; // 5 minutes
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadOrderSummary();
+        updateAuthUI();
+    });
+
+    async function loadOrderSummary() {
+        try {
+            const order = await api.get(`/orders/${orderId}`);
+            
+            document.getElementById('subtotal').textContent = 
+                formatCurrency(order.total_amount - order.delivery_fee);
+            document.getElementById('deliveryFee').textContent = 
+                formatCurrency(order.delivery_fee);
+            document.getElementById('totalAmount').textContent = 
+                formatCurrency(order.total_amount);
+            
+            // Résumé produit
+            const productSummary = document.getElementById('productSummary');
+            productSummary.innerHTML = `
+                <div class="product-info">
+                    <h4>Commande #${order.reference}</h4>
+                    <p>Quantité: ${order.quantity}</p>
+                    <p>Livraison: ${order.delivery_address || 'À convenir'}</p>
+                </div>
+            `;
+        } catch (error) {
+            showError('Erreur lors du chargement de la commande');
+        }
+    }
+
+    async function initiatePayment() {
+        const phoneNumber = document.getElementById('phoneNumber').value;
+        
+        if (!phoneNumber) {
+            showError('Veuillez entrer votre numéro MobilePay');
+            return;
+        }
+
+        // Valider le format guinéen
+        if (!validateGuineaPhone(phoneNumber)) {
+            showError('Numéro de téléphone guinéen invalide');
+            return;
+        }
+
+        const btn = document.getElementById('initiatePaymentBtn');
+        btn.disabled = true;
+        btn.querySelector('.btn-text').style.display = 'none';
+        btn.querySelector('.btn-loader').style.display = 'inline';
+
+        try {
+            const response = await api.post('/payments/initiate', {
+                order_id: orderId,
+                phone_number: phoneNumber,
+                payment_method: 'mobilepay'
+            });
+
+            if (response.id) {
+                currentPayment = response;
+                
+                // Passer à l'étape 2
+                showStep(2);
+                
+                // Mettre à jour les infos
+                document.getElementById('paymentReference').textContent = response.reference;
+                document.getElementById('pendingAmount').textContent = formatCurrency(response.amount);
+                
+                // Démarrer le timer
+                startPaymentTimer();
+                
+                // Vérification automatique du statut
+                startPaymentPolling(response.reference);
+            }
+        } catch (error) {
+            showError(error.message || 'Erreur lors de l\'initiation du paiement');
+            btn.disabled = false;
+            btn.querySelector('.btn-text').style.display = 'inline';
+            btn.querySelector('.btn-loader').style.display = 'none';
+        }
+    }
+
+    async function verifyPayment() {
+        if (!currentPayment) return;
+
+        const verificationBtn = document.getElementById('verifyPaymentBtn');
+        verificationBtn.disabled = true;
+        verificationBtn.textContent = '⏳ Vérification...';
+
+        try {
+            const result = await api.post('/payments/verify', {
+                payment_reference: currentPayment.reference,
+                transaction_id: currentPayment.mobilepay_transaction_id
+            });
+
+            if (result.status === 'COMPLETED') {
+                // Paiement confirmé !
+                stopPaymentTimer();
+                
+                document.getElementById('confirmedAmount').textContent = 
+                    formatCurrency(result.amount);
+                document.getElementById('orderReference').textContent = 
+                    result.reference;
+                
+                showStep(3);
+                
+                // Mettre à jour le lien de suivi
+                document.getElementById('trackOrderBtn').href = 
+                    `/orders/tracking?id=${orderId}`;
+            } else {
+                showError('Paiement non encore confirmé. Veuillez réessayer.');
+            }
+        } catch (error) {
+            showError('Erreur de vérification: ' + error.message);
+        } finally {
+            verificationBtn.disabled = false;
+            verificationBtn.textContent = '✅ J\'ai confirmé le paiement';
+        }
+    }
+
+    function startPaymentTimer() {
+        timeLeft = 300;
+        updateTimerDisplay();
+        
+        paymentTimer = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            
+            if (timeLeft <= 0) {
+                clearInterval(paymentTimer);
+                showError('Le délai de paiement a expiré');
+                showStep(1);
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        document.getElementById('timerDisplay').textContent = 
+            `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function stopPaymentTimer() {
+        if (paymentTimer) {
+            clearInterval(paymentTimer);
+            paymentTimer = null;
+        }
+    }
+
+    function startPaymentPolling(reference) {
+        const pollInterval = setInterval(async () => {
+            if (!currentPayment) {
+                clearInterval(pollInterval);
+                return;
+            }
+            
+            try {
+                const status = await api.get(`/payments/status/${reference}`);
+                
+                if (status === 'COMPLETED') {
+                    clearInterval(pollInterval);
+                    verifyPayment();
+                }
+            } catch (error) {
+                // Ignorer les erreurs de polling
+            }
+        }, 5000); // Vérifier toutes les 5 secondes
+        
+        // Arrêter après 5 minutes
+        setTimeout(() => clearInterval(pollInterval), 300000);
+    }
+
+    function cancelPayment() {
+        if (confirm('Êtes-vous sûr de vouloir annuler ce paiement ?')) {
+            stopPaymentTimer();
+            currentPayment = null;
+            showStep(1);
+        }
+    }
+
+    function showStep(step) {
+        document.querySelectorAll('.checkout-step-content').forEach(el => {
+            el.style.display = 'none';
+        });
+        document.getElementById(`step${step}Content`).style.display = 'block';
+        
+        // Mettre à jour les indicateurs
+        document.querySelectorAll('.checkout-steps .step').forEach((el, index) => {
+            el.classList.remove('active', 'completed');
+            if (index + 1 < step) el.classList.add('completed');
+            if (index + 1 === step) el.classList.add('active');
+        });
+    }
+
+    function showError(message) {
+        // Implémenter l'affichage d'erreur
+        alert(message); // Version simple, à améliorer avec un toast
+    }
+
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('fr-GN', {
+            style: 'currency',
+            currency: 'GNF',
+            minimumFractionDigits: 0
+        }).format(amount);
+    }
+</script>
+{% endblock %}

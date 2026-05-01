@@ -1,0 +1,317 @@
+/* ============================================
+   RESPONSIVE DESIGN
+   Mobile-First pour le marché guinéen
+   ============================================ */
+
+/* Tablettes et plus petits écrans */
+@media (max-width: 1024px) {
+    .container {
+        padding: 0 var(--spacing-md);
+    }
+    
+    .header-container {
+        gap: var(--spacing-sm);
+    }
+    
+    .search-bar {
+        max-width: 300px;
+    }
+    
+    .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: var(--spacing-md);
+    }
+    
+    .steps {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+    
+    .hero h1 {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .mobilepay-content {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+/* Mobiles */
+@media (max-width: 768px) {
+    /* Header mobile */
+    .header {
+        height: 56px;
+    }
+    
+    .header-container {
+        flex-wrap: wrap;
+        padding: var(--spacing-sm);
+    }
+    
+    .logo-text {
+        font-size: var(--font-size-md);
+    }
+    
+    .search-bar {
+        order: 3;
+        max-width: 100%;
+        width: 100%;
+        margin-top: var(--spacing-sm);
+    }
+    
+    .header-actions {
+        gap: var(--spacing-xs);
+    }
+    
+    .sell-btn {
+        display: none !important;
+    }
+    
+    .auth-buttons .btn {
+        padding: 6px 12px;
+        font-size: var(--font-size-xs);
+    }
+    
+    /* Cache certaines colonnes en mobile */
+    .category-select {
+        display: none;
+    }
+    
+    /* Grille produits */
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+    
+    .product-card {
+        border-radius: var(--radius-md);
+    }
+    
+    .product-image {
+        height: 150px;
+    }
+    
+    .product-info {
+        padding: var(--spacing-sm);
+    }
+    
+    .product-title {
+        font-size: var(--font-size-sm);
+    }
+    
+    .product-price {
+        font-size: var(--font-size-md);
+    }
+    
+    /* Hero */
+    .hero {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+    
+    .hero h1 {
+        font-size: var(--font-size-xl);
+    }
+    
+    .hero p {
+        font-size: var(--font-size-sm);
+    }
+    
+    .hero-cta {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .hero-cta .btn {
+        width: 100%;
+    }
+    
+    .hero-stats {
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+    }
+    
+    /* Catégories */
+    .categories-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-sm);
+    }
+    
+    .category-card {
+        padding: var(--spacing-md) var(--spacing-sm);
+    }
+    
+    .category-name {
+        font-size: var(--font-size-xs);
+    }
+    
+    .category-count {
+        display: none;
+    }
+    
+    /* Checkout */
+    .checkout-steps {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .step {
+        width: 100%;
+    }
+    
+    .order-summary {
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    /* Order tracking */
+    .tracking-actions {
+        flex-direction: column;
+    }
+    
+    .tracking-actions .btn {
+        width: 100%;
+    }
+    
+    /* Footer */
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+}
+
+/* Très petits écrans */
+@media (max-width: 480px) {
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .product-image {
+        height: 200px;
+    }
+    
+    .categories-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .header-container {
+        flex-wrap: wrap;
+    }
+    
+    .btn-lg {
+        padding: 12px 20px;
+        font-size: var(--font-size-md);
+    }
+    
+    .mobilepay-content {
+        padding: var(--spacing-md);
+    }
+    
+    .payment-section {
+        padding: var(--spacing-md);
+    }
+    
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+}
+
+/* Navigation mobile */
+@media (max-width: 768px) {
+    /* Menu burger */
+    .mobile-menu-btn {
+        display: block;
+    }
+    
+    /* Navigation mobile overlay */
+    .mobile-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        border-top: 1px solid var(--gray-200);
+        padding: var(--spacing-sm);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        z-index: var(--z-sticky);
+        height: var(--mobile-nav-height);
+    }
+    
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        color: var(--gray-500);
+        text-decoration: none;
+        font-size: var(--font-size-xs);
+    }
+    
+    .mobile-nav-item.active {
+        color: var(--primary);
+    }
+    
+    .mobile-nav-icon {
+        font-size: var(--font-size-xl);
+    }
+    
+    /* Ajuster le contenu pour la nav mobile */
+    .main-content {
+        padding-bottom: calc(var(--mobile-nav-height) + var(--spacing-md));
+    }
+    
+    /* Toast en mobile */
+    .toast {
+        bottom: calc(var(--mobile-nav-height) + var(--spacing-md));
+        width: 90%;
+    }
+}
+
+/* Mode sombre (optionnel) */
+@media (prefers-color-scheme: dark) {
+    /* À implémenter si nécessaire pour la Guinée */
+}
+
+/* Optimisations pour connexions lentes */
+@media (max-width: 768px) {
+    /* Charger des images plus petites */
+    .product-image {
+        loading: lazy;
+    }
+    
+    /* Désactiver les animations lourdes */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}
+
+/* Support PWA */
+@media (display-mode: standalone) {
+    .header {
+        padding-top: env(safe-area-inset-top);
+    }
+    
+    .mobile-nav {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* Orientation paysage sur mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .hero {
+        padding: var(--spacing-md);
+    }
+    
+    .hero h1 {
+        font-size: var(--font-size-lg);
+    }
+    
+    .products-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

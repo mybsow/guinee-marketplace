@@ -1,0 +1,305 @@
+{% extends "base/base.html" %}
+
+{% block title %}Suivi de commande - GuinéeMarket{% endblock %}
+
+{% block content %}
+<div class="tracking-container">
+    <h1>Suivi de commande</h1>
+    
+    <div class="tracking-card" id="trackingCard">
+        <!-- État de la commande -->
+        <div class="order-status-banner" id="statusBanner">
+            <span class="status-icon">📦</span>
+            <div class="status-info">
+                <h2 id="statusTitle">Commande en cours</h2>
+                <p id="statusDescription">Votre commande est en cours de traitement</p>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="tracking-timeline" id="trackingTimeline">
+            <!-- Rempli dynamiquement -->
+        </div>
+
+        <!-- Détails commande -->
+        <div class="order-info-card">
+            <h3>Détails de la commande</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <small>N° Commande</small>
+                    <strong id="orderRef">-</strong>
+                </div>
+                <div class="info-item">
+                    <small>Date</small>
+                    <strong id="orderDate">-</strong>
+                </div>
+                <div class="info-item">
+                    <small>Montant</small>
+                    <strong id="orderAmount">-</strong>
+                </div>
+                <div class="info-item">
+                    <small>Statut paiement</small>
+                    <strong id="paymentStatus">-</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="tracking-actions" id="trackingActions">
+            <!-- Boutons d'action contextuels -->
+        </div>
+
+        <!-- Confirmation de livraison (si livrée) -->
+        <div class="delivery-confirmation" id="deliveryConfirmation" style="display: none;">
+            <div class="confirmation-card">
+                <h3>📦 Votre commande est arrivée !</h3>
+                <p>
+                    Veuillez confirmer la réception pour libérer le paiement au vendeur.
+                </p>
+                
+                <div class="form-group">
+                    <label for="confirmationCode">Code de confirmation</label>
+                    <input type="text" id="confirmationCode" 
+                           class="form-control" 
+                           placeholder="Entrez le code à 6 chiffres"
+                           maxlength="6">
+                    <small>Le code se trouve dans le SMS que vous avez reçu</small>
+                </div>
+
+                <div class="rating-section">
+                    <label>Notez votre expérience</label>
+                    <div class="star-rating" id="starRating">
+                        <span class="star" data-rating="1">⭐</span>
+                        <span class="star" data-rating="2">⭐</span>
+                        <span class="star" data-rating="3">⭐</span>
+                        <span class="star" data-rating="4">⭐</span>
+                        <span class="star" data-rating="5">⭐</span>
+                    </div>
+                    <input type="hidden" id="ratingValue" value="5">
+                </div>
+
+                <div class="form-group">
+                    <label for="reviewComment">Commentaire (optionnel)</label>
+                    <textarea id="reviewComment" class="form-control" rows="3" 
+                              placeholder="Partagez votre expérience..."></textarea>
+                </div>
+
+                <button class="btn btn-success btn-lg btn-block" onclick="confirmDelivery()">
+                    ✅ Confirmer la réception et libérer le paiement
+                </button>
+
+                <div class="security-notice">
+                    <span>🔒</span>
+                    <small>
+                        En confirmant, vous autorisez le versement de 
+                        <strong id="merchantAmount">0 GNF</strong> au vendeur.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section litige -->
+    <div class="dispute-section" id="disputeSection">
+        <h3>Un problème avec votre commande ?</h3>
+        <p>Si vous n'avez pas reçu votre commande ou si elle ne correspond pas à la description, 
+           vous pouvez ouvrir un litige.</p>
+        <button class="btn btn-outline-danger" onclick="openDispute()">
+            Signaler un problème
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/order_tracking.js"></script>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get('id');
+    
+    let currentOrder = null;
+    let selectedRating = 5;
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadOrderTracking();
+        setupStarRating();
+        updateAuthUI();
+        
+        // Rafraîchir toutes les 30 secondes
+        setInterval(loadOrderTracking, 30000);
+    });
+
+    async function loadOrderTracking() {
+        try {
+            const tracking = await api.get(`/orders/${orderId}/tracking`);
+            currentOrder = tracking.order;
+            
+            updateStatusBanner(tracking.current_status);
+            updateTimeline(tracking.timeline);
+            updateOrderInfo(tracking.order);
+            updateActions(tracking);
+            
+            // Afficher la confirmation si livrée
+            if (tracking.current_status === 'delivered' && !tracking.order.customer_confirmed) {
+                document.getElementById('deliveryConfirmation').style.display = 'block';
+                document.getElementById('merchantAmount').textContent = 
+                    formatCurrency(tracking.order.merchant_amount);
+            }
+            
+        } catch (error) {
+            console.error('Erreur chargement suivi:', error);
+        }
+    }
+
+    function updateStatusBanner(status) {
+        const banner = document.getElementById('statusBanner');
+        const statusConfig = {
+            'pending_payment': { icon: '💳', title: 'En attente de paiement', color: 'warning' },
+            'payment_received': { icon: '✅', title: 'Paiement reçu', color: 'info' },
+            'processing': { icon: '🔧', title: 'En préparation', color: 'info' },
+            'shipped': { icon: '🚚', title: 'En cours de livraison', color: 'info' },
+            'delivered': { icon: '📦', title: 'Livré - À confirmer', color: 'success' },
+            'completed': { icon: '🎉', title: 'Commande terminée', color: 'success' },
+            'cancelled': { icon: '❌', title: 'Commande annulée', color: 'danger' }
+        };
+        
+        const config = statusConfig[status] || statusConfig['pending_payment'];
+        
+        document.querySelector('.status-icon').textContent = config.icon;
+        document.getElementById('statusTitle').textContent = config.title;
+        banner.className = `order-status-banner status-${config.color}`;
+    }
+
+    function updateTimeline(timeline) {
+        const container = document.getElementById('trackingTimeline');
+        container.innerHTML = timeline.map((event, index) => `
+            <div class="timeline-item ${index === timeline.length - 1 ? 'current' : 'completed'}">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <p class="timeline-event">${event.event}</p>
+                    <small class="timeline-date">${formatDate(event.date)}</small>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateOrderInfo(order) {
+        document.getElementById('orderRef').textContent = order.reference;
+        document.getElementById('orderDate').textContent = formatDate(order.created_at);
+        document.getElementById('orderAmount').textContent = formatCurrency(order.total_amount);
+        document.getElementById('paymentStatus').textContent = order.status;
+    }
+
+    function updateActions(tracking) {
+        const actionsContainer = document.getElementById('trackingActions');
+        actionsContainer.innerHTML = '';
+        
+        if (tracking.next_possible_actions && tracking.next_possible_actions.length > 0) {
+            tracking.next_possible_actions.forEach(action => {
+                if (action.action === 'confirm_delivery') {
+                    actionsContainer.innerHTML += `
+                        <button class="btn btn-success" onclick="scrollToConfirmation()">
+                            ${action.label}
+                        </button>
+                    `;
+                }
+            });
+        }
+        
+        if (tracking.current_status === 'delivered' && !tracking.order.customer_confirmed) {
+            actionsContainer.innerHTML += `
+                <small class="text-warning">⚠️ Confirmez la réception pour libérer le paiement</small>
+            `;
+        }
+    }
+
+    async function confirmDelivery() {
+        const confirmationCode = document.getElementById('confirmationCode').value;
+        
+        if (!confirmationCode || confirmationCode.length !== 6) {
+            alert('Veuillez entrer le code de confirmation à 6 chiffres');
+            return;
+        }
+
+        try {
+            const result = await api.post(`/orders/${orderId}/confirm-delivery`, {
+                order_id: parseInt(orderId),
+                confirmation_code: confirmationCode,
+                rating: selectedRating,
+                review: document.getElementById('reviewComment').value
+            });
+
+            if (result.success) {
+                alert('✅ Livraison confirmée ! Le paiement a été libéré au vendeur.');
+                // Recharger la page
+                window.location.reload();
+            } else {
+                alert('❌ ' + result.message);
+            }
+        } catch (error) {
+            alert('Erreur: ' + error.message);
+        }
+    }
+
+    function setupStarRating() {
+        const stars = document.querySelectorAll('#starRating .star');
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = parseInt(this.dataset.rating);
+                selectedRating = rating;
+                document.getElementById('ratingValue').value = rating;
+                
+                // Mettre à jour visuellement
+                stars.forEach((s, index) => {
+                    s.style.opacity = index < rating ? '1' : '0.3';
+                });
+            });
+            
+            star.addEventListener('mouseenter', function() {
+                const rating = parseInt(this.dataset.rating);
+                stars.forEach((s, index) => {
+                    s.style.transform = index < rating ? 'scale(1.2)' : 'scale(1)';
+                });
+            });
+            
+            star.addEventListener('mouseleave', function() {
+                stars.forEach(s => {
+                    s.style.transform = 'scale(1)';
+                });
+            });
+        });
+    }
+
+    function scrollToConfirmation() {
+        document.getElementById('deliveryConfirmation').style.display = 'block';
+        document.getElementById('deliveryConfirmation').scrollIntoView({ 
+            behavior: 'smooth' 
+        });
+    }
+
+    function openDispute() {
+        if (confirm('Voulez-vous signaler un problème avec cette commande ?')) {
+            // Rediriger vers la page de litige
+            window.location.href = `/orders/${orderId}/dispute`;
+        }
+    }
+
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('fr-GN', {
+            style: 'currency',
+            currency: 'GNF',
+            minimumFractionDigits: 0
+        }).format(amount);
+    }
+
+    function formatDate(dateString) {
+        return new Date(dateString).toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+</script>
+{% endblock %}
